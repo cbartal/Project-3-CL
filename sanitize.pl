@@ -28,17 +28,17 @@ findCommentThreshhold(User, Threshhold) :-
 
 
 /* determines if a post is 'bad' by comparing the two conditions */
-isBadPost(X) :-
-    post(X,Y,Z),(
+isBadPost(U,X) :-
+    post(X,U,Z),(
     (
     isProblematic(Z),
     postLikes(X,P),
-    findLikeThreshhold(Y, T),
+    findLikeThreshhold(U, T),
     exceedsThreshhold(P,T)
     ) ;
     (
         postComments(X,C),
-        findCommentThreshhold(Y,M),
+        findCommentThreshhold(U,M),
         exceedsThreshhold(C,M)
     )).
     
@@ -61,15 +61,36 @@ postComments(P,C) :-
 
 
 /* returns a list of all the bad posts */
-findBadPosts(L) :- 
-                findall(X, isBadPost(X), Y),
-                /* the sort gets rid of duplicates (dups come from isBadPost or condition) */
-                sort(Y, L).
+findBadPosts(U,L) :- setof(X, isBadPost(U,X), L).
+
+
+/* below code returns a list of the users that U can see posts from */
+areFriends(X,Y) :- (friended(X,Y) ; friended(Y,X)).
+
+not_member(_, []).
+not_member(X, [H|T]) :- dif(X, H), not_member(X, T).
+ 
+friended(A, B, Seen) :- not_member(B, Seen), areFriends(A, B).
+friended(A, B, Seen) :- areFriends(A, X), not_member(X, Seen), friended(X, B, [A|Seen]).
+ 
+friended_tx(A, B) :- friended(A, B, []).           
+
+userPostISee(U,L) :- setof(P,friended_tx(U,P),L).
+
+/* can the interviewer see clients posts 
+ X = interview, Y = client
+*/
+seeUserPosts(X,Y) :- 
+                    userPostISee(X,L),
+                    member(Y,L).
+
 
 
 
 
 % the final rule to build
-% toBeCheckedPost(User, IntViewer, ID) :- ...
+toBeCheckedPost(User, IntViewer, ID) :- 
+                                    (seeUserPosts(IntViewer,User) -> isBadPost(User,ID) ;
+                                    false).
 
 %setof(ID, toBeCheckedPost(joe, rick, ID), S).
