@@ -67,6 +67,12 @@ findBadPosts(U,L) :- setof(X, isBadPost(U,X), L).
 /* below code returns a list of the users that U can see posts from */
 areFriends(X,Y) :- (friended(X,Y) ; friended(Y,X)).
 
+/*Removes Element from the list*/
+/*remove_list([], _, []).
+remove_list([X|Tail], L2, Result):- member(X, L2), !, remove_list(Tail, L2, Result). 
+remove_list([X|Tail], L2, [X|Result]):- remove_list(Tail, L2, Result).*/
+
+
 not_member(_, []).
 not_member(X, [H|T]) :- dif(X, H), not_member(X, T).
  
@@ -85,12 +91,12 @@ seeUserPosts(X,Y) :-
                     member(Y,L).
 
 
-
-
-
 % the final rule to build
 toBeCheckedPost(User, IntViewer, ID) :- 
                                     (seeUserPosts(IntViewer,User) -> isBadPost(User,ID) ;
                                     false).
 
 %setof(ID, toBeCheckedPost(joe, rick, ID), S).
+
+              
+
